@@ -7,6 +7,6 @@ import (
 )
 
 func main() {
-	genisesBlock := gochain.NewBlock("")
+	genisesBlock := gochain.NewBlock(1, 72608, "")
 	fmt.Println(genisesBlock)
 }
