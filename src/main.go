@@ -29,9 +29,16 @@ func getBlock(c *gin.Context) {
 }
 
 func postBlock(c *gin.Context) {
-	data := c.PostForm("data")
+	var requestBody struct {
+		Data string `json:"data"`
+	}
+	if err := c.BindJSON(&requestBody); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
 	prev := blockChain[len(blockChain)-1].Hash
-	newBlock := gochain.NewBlock(len(blockChain)+1, data, prev)
+	newBlock := gochain.NewBlock(len(blockChain)+1, requestBody.Data, prev)
 	blockChain = append(blockChain, *newBlock)
 
 	serializedBlock := map[string]interface{}{
