@@ -9,12 +9,12 @@ type Block struct {
 	Number int
 	Nonce  int
 	Data   string
+	Prev   [32]byte
 	Hash   [32]byte
-	prev   [32]byte
 }
 
 func (b *Block) String() string {
-	return fmt.Sprintf("Block{Block#: %d, Data: %s, Nonce: %d, Hash: %x}", b.Number, b.Data, b.Nonce, b.Hash)
+	return fmt.Sprintf("Block{Block#: %d, Data: %s, Nonce: %d, Prev: %x, Hash: %x}", b.Number, b.Data, b.Nonce, b.Prev, b.Hash)
 }
 
 func calculateNonce(blockNumber int, data string, prev [32]byte) int {
@@ -33,10 +33,9 @@ func calculateNonce(blockNumber int, data string, prev [32]byte) int {
 
 func NewBlock(blockNumber int, data string, prev [32]byte) *Block {
 	nonce := calculateNonce(blockNumber, data, prev)
-	fmt.Println(nonce)
 
 	blockData := fmt.Sprintf("%d%d%s%x", blockNumber, nonce, data, prev)
 	hash := sha256.Sum256([]byte(blockData))
 
-	return &Block{blockNumber, nonce, data, hash, prev}
+	return &Block{blockNumber, nonce, data, prev, hash}
 }

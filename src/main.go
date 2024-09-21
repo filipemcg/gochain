@@ -7,8 +7,15 @@ import (
 )
 
 func main() {
-	genisesPrevBytes := [32]byte{}
-	copy(genisesPrevBytes[:], "00000000000000000000000000000000")
+	blockChain := []gochain.Block{}
+
+	genisesPrevBytes := [32]byte{0}
+
 	genisesBlock := gochain.NewBlock(1, "", genisesPrevBytes)
-	fmt.Println(genisesBlock)
+
+	blockChain = append(blockChain, *genisesBlock)
+
+	for _, b := range blockChain {
+		fmt.Printf("Block{Block#: %d, Data: %s, Nonce: %d, Prev: %x, Hash: %x}\n", b.Number, b.Data, b.Nonce, b.Prev, b.Hash)
+	}
 }
