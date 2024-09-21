@@ -7,6 +7,8 @@ import (
 )
 
 func main() {
-	genisesBlock := gochain.NewBlock(1, 72608, "")
+	genisesPrevBytes := [32]byte{}
+	copy(genisesPrevBytes[:], "00000000000000000000000000000000")
+	genisesBlock := gochain.NewBlock(1, "", genisesPrevBytes)
 	fmt.Println(genisesBlock)
 }
