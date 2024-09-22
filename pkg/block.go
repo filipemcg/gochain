@@ -13,10 +13,6 @@ type Block struct {
 	Hash   [32]byte
 }
 
-func (b *Block) String() string {
-	return fmt.Sprintf("Block{Block#: %d, Data: %s, Nonce: %d, Prev: %x, Hash: %x}", b.Number, b.Data, b.Nonce, b.Prev, b.Hash)
-}
-
 func calculateNonce(blockNumber int, data string, prev [32]byte) int {
 	var nonce int
 	var hash [32]byte
