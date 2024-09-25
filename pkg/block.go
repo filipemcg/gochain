@@ -1,8 +1,9 @@
 package gochain
 
 import (
+	"bytes"
 	"crypto/sha256"
-	"fmt"
+	"encoding/gob"
 )
 
 type Block struct {
@@ -10,28 +11,41 @@ type Block struct {
 	Nonce  int
 	Data   string
 	Prev   [32]byte
-	Hash   [32]byte
 }
 
-func calculateNonce(blockNumber int, data string, prev [32]byte) int {
+func (b *Block) toBytes() ([]byte, error) {
+	var buffer bytes.Buffer
+	encoder := gob.NewEncoder(&buffer)
+	err := encoder.Encode(b)
+	if err != nil {
+		return nil, err
+	}
+	return buffer.Bytes(), nil
+}
+
+func (b *Block) Hash() [32]byte {
+	bytesArray, err := b.toBytes()
+	if err != nil {
+		panic(err)
+	}
+	return sha256.Sum256(bytesArray)
+}
+
+func NewBlock(blockNumber int, data string, prev [32]byte) Block {
 	var nonce int
 	var hash [32]byte
+	var newBlock Block
 	for {
-		blockData := fmt.Sprintf("%d%d%s%x", blockNumber, nonce, data, prev)
-		hash = sha256.Sum256([]byte(blockData))
+		newBlock = Block{blockNumber, nonce, data, prev}
+		bytesArray, err := newBlock.toBytes()
+		if err != nil {
+			panic(err)
+		}
+		hash = sha256.Sum256(bytesArray)
 		if hash[0] == 0x00 && hash[1] == 0x00 {
 			break
 		}
 		nonce++
 	}
-	return nonce
-}
-
-func NewBlock(blockNumber int, data string, prev [32]byte) *Block {
-	nonce := calculateNonce(blockNumber, data, prev)
-
-	blockData := fmt.Sprintf("%d%d%s%x", blockNumber, nonce, data, prev)
-	hash := sha256.Sum256([]byte(blockData))
-
-	return &Block{blockNumber, nonce, data, prev, hash}
+	return newBlock
 }
