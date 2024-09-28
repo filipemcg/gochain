@@ -1,11 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
 	gochain "github.com/filipemcg/gochain/pkg"
-	"github.com/gin-gonic/gin"
 )
 
 type Block struct {
@@ -22,8 +22,18 @@ type Response struct {
 
 var blockChain = []gochain.Block{}
 
-func getBlock(c *gin.Context) {
-	hash := c.Param("hash")
+func JSON(w http.ResponseWriter, s interface{}) {
+	b, err := json.Marshal(s)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(b)
+}
+
+func getBlock(w http.ResponseWriter, req *http.Request) {
+	hash := req.PathValue("hash")
 	for _, block := range blockChain {
 		if fmt.Sprintf("%x", block.Hash()) == hash {
 			response := Response{
@@ -35,19 +45,20 @@ func getBlock(c *gin.Context) {
 				},
 				Hash: fmt.Sprintf("%x", block.Hash()),
 			}
-			c.JSON(http.StatusOK, response)
+			JSON(w, response)
 			return
 		}
 	}
-	c.JSON(http.StatusNotFound, gin.H{"message": "block not found"})
+	http.Error(w, "block not found", http.StatusNotFound)
 }
 
-func postBlock(c *gin.Context) {
+func postBlock(w http.ResponseWriter, req *http.Request) {
 	var requestBody struct {
 		Data string `json:"data"`
 	}
-	if err := c.BindJSON(&requestBody); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+
+	if err := json.NewDecoder(req.Body).Decode(&requestBody); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
@@ -64,11 +75,11 @@ func postBlock(c *gin.Context) {
 		},
 		Hash: fmt.Sprintf("%x", newBlock.Hash()),
 	}
-	c.JSON(http.StatusCreated, response)
+	JSON(w, response)
 }
 
 func RunApi() {
-	r := gin.Default()
+	mux := http.NewServeMux()
 
 	genisesPrevBytes := [32]byte{0}
 
@@ -76,9 +87,9 @@ func RunApi() {
 
 	blockChain = append(blockChain, genisesBlock)
 
-	r.GET("/blocks/:hash", getBlock)
-	r.POST("/blocks", postBlock)
+	mux.HandleFunc("GET /blocks/{hash}", getBlock)
+	mux.HandleFunc("POST /blocks", postBlock)
 
 	fmt.Println("Starting server on :9000")
-	r.Run(":9000")
+	http.ListenAndServe(":9000", mux)
 }
