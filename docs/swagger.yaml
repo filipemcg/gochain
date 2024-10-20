@@ -1,0 +1,80 @@
+definitions:
+  main.Block:
+    properties:
+      data:
+        type: string
+      nonce:
+        type: integer
+      number:
+        type: integer
+      prev:
+        type: string
+    type: object
+  main.ErrorResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  main.PostBlockRequest:
+    properties:
+      data:
+        type: string
+    type: object
+  main.Response:
+    properties:
+      block:
+        $ref: '#/definitions/main.Block'
+      hash:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /blocks:
+    post:
+      consumes:
+      - application/json
+      description: Create a new block with the provided data
+      parameters:
+      - description: Block Data
+        in: body
+        name: block
+        required: true
+        schema:
+          $ref: '#/definitions/main.PostBlockRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/main.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/main.ErrorResponse'
+      summary: Create a new block
+      tags:
+      - blocks
+  /blocks/{hash}:
+    get:
+      description: Get a block by its hash
+      parameters:
+      - description: Block Hash
+        in: path
+        name: hash
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/main.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/main.ErrorResponse'
+      summary: Get a block by hash
+      tags:
+      - blocks
+swagger: "2.0"

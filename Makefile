@@ -5,3 +5,6 @@ run:
 # Build the Go program
 build:
 	go build -o bin ./src
+
+swag:
+	swag init --dir src/
