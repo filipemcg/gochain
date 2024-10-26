@@ -4,7 +4,7 @@ run:
 
 # Build the Go program
 build:
-	go build -o bin ./src
+	go build -o bin/gochain ./src
 
 swag:
 	swag init --dir src/

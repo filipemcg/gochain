@@ -7,6 +7,29 @@ import (
 	"github.com/dgraph-io/badger/v4"
 )
 
+// Example on how to use this package
+// func example() {
+//  kv, err := NewBadgerDb("./store")
+//  if err != nil {
+//   log.Fatal(err)
+//  }
+//  defer kv.Close()
+//
+//  // set value
+//  _ = kv.Set("key-a", "value-a")
+//
+//  /*get value*/
+//  val, _ := kv.Get("key-a")
+//  fmt.Println(val)
+//
+//  // delete value
+//  _ = kv.Delete("key-a")
+//
+//  // check existence
+//  exists, _ := kv.Exists("key-a")
+//  fmt.Println(exists)
+// }
+
 type KV struct {
 	db *badger.DB
 }
