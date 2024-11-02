@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/hex"
 	"fmt"
 	"net/http"
 
@@ -36,6 +38,7 @@ type PostBlockRequest struct {
 }
 
 var blockChain = []gochain.Block{}
+var kv *gochain.KV
 
 // getBlock retrieves a block by its hash
 // @Summary Get a block by hash
@@ -47,22 +50,40 @@ var blockChain = []gochain.Block{}
 // @Router /blocks/{hash} [get]
 func getBlock(c *gin.Context) {
 	hash := c.Param("hash")
-	for _, block := range blockChain {
-		if fmt.Sprintf("%x", block.Hash()) == hash {
-			response := Response{
-				Block: Block{
-					Number: block.Number,
-					Data:   block.Data,
-					Nonce:  block.Nonce,
-					Prev:   fmt.Sprintf("%x", block.Prev),
-				},
-				Hash: fmt.Sprintf("%x", block.Hash()),
-			}
-			c.JSON(http.StatusOK, response)
-			return
-		}
+	genisesHashBytes, _ := hex.DecodeString(hash)
+
+	genises := gochain.GenisesBlock()
+	genisesHash := genises.Hash()
+
+	if bytes.Equal(genisesHash[:], genisesHashBytes) {
+		fmt.Println("Genises block")
 	}
-	c.JSON(http.StatusNotFound, ErrorResponse{Message: "block not found"})
+
+	tt := hex.EncodeToString(genisesHash[:])
+	ttt, _ := hex.DecodeString(tt)
+
+	value, err := kv.Get(ttt)
+	if err != nil {
+		c.JSON(http.StatusNotFound, ErrorResponse{Message: "block not found"})
+		return
+	}
+
+	block, err := gochain.BlockFromBytes(value)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{Message: "error decoding block"})
+		return
+	}
+
+	response := Response{
+		Block: Block{
+			Number: block.Number,
+			Data:   block.Data,
+			Nonce:  block.Nonce,
+			Prev:   fmt.Sprintf("%x", block.Prev),
+		},
+		Hash: fmt.Sprintf("%x", block.Hash()),
+	}
+	c.JSON(http.StatusOK, response)
 }
 
 // postBlock creates a new block
@@ -99,13 +120,11 @@ func postBlock(c *gin.Context) {
 }
 
 // RunApi starts the API server
-func RunApi() {
+func RunApi(chain *gochain.KV) {
+	kv = chain
+
 	r := gin.Default()
 	docs.SwaggerInfo.BasePath = "/api/v1"
-
-	genisesPrevBytes := [32]byte{0}
-	genisesBlock := gochain.NewBlock(1, "", genisesPrevBytes)
-	blockChain = append(blockChain, genisesBlock)
 
 	apiV1 := r.Group("/api/v1")
 

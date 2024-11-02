@@ -50,11 +50,11 @@ func (k *KV) Close() error {
 	return k.db.Close()
 }
 
-func (k *KV) Exists(key string) (bool, error) {
+func (k *KV) Exists(key []byte) (bool, error) {
 	var exists bool
 	err := k.db.View(
 		func(tx *badger.Txn) error {
-			if val, err := tx.Get([]byte(key)); err != nil {
+			if val, err := tx.Get(key); err != nil {
 				return err
 			} else if val != nil {
 				exists = true
@@ -67,11 +67,11 @@ func (k *KV) Exists(key string) (bool, error) {
 	return exists, err
 }
 
-func (k *KV) Get(key string) (string, error) {
-	var value string
+func (k *KV) Get(key []byte) ([]byte, error) {
+	var value []byte
 	return value, k.db.View(
 		func(tx *badger.Txn) error {
-			item, err := tx.Get([]byte(key))
+			item, err := tx.Get(key)
 			if err != nil {
 				return fmt.Errorf("getting value: %w", err)
 			}
@@ -79,21 +79,21 @@ func (k *KV) Get(key string) (string, error) {
 			if err != nil {
 				return fmt.Errorf("copying value: %w", err)
 			}
-			value = string(valCopy)
+			value = valCopy
 			return nil
 		})
 }
 
-func (k *KV) Set(key, value string) error {
+func (k *KV) Set(key []byte, value []byte) error {
 	return k.db.Update(
 		func(txn *badger.Txn) error {
-			return txn.Set([]byte(key), []byte(value))
+			return txn.Set(key, value)
 		})
 }
 
-func (k *KV) Delete(key string) error {
+func (k *KV) Delete(key []byte) error {
 	return k.db.Update(
 		func(txn *badger.Txn) error {
-			return txn.Delete([]byte(key))
+			return txn.Delete(key)
 		})
 }

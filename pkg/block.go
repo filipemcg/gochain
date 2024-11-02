@@ -22,13 +22,23 @@ func (b *Block) toBytes() ([]byte, error) {
 	}
 	return buffer.Bytes(), nil
 }
-
 func (b *Block) Hash() [32]byte {
 	bytesArray, err := b.toBytes()
 	if err != nil {
 		panic(err)
 	}
 	return sha256.Sum256(bytesArray)
+}
+
+func BlockFromBytes(data []byte) (Block, error) {
+	var block Block
+	buffer := bytes.NewBuffer(data)
+	decoder := gob.NewDecoder(buffer)
+	err := decoder.Decode(&block)
+	if err != nil {
+		return block, err
+	}
+	return block, nil
 }
 
 func NewBlock(blockNumber int, data string, prev [32]byte) Block {
